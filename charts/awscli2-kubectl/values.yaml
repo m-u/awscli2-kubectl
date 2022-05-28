@@ -8,7 +8,8 @@ schedule: "0 */1 * * *"
 
 aws:
   region: "us-east-1"
-  account: "680816966533"
+  # aws account id required
+  account: ""
 
 image:
   repository: muccello/awscli2-kubectl
