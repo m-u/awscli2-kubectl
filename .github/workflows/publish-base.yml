@@ -4,11 +4,11 @@ on:
 
   pull_request:
     branches:
-    - master
+    - main
 
   push:
     branches:
-    - master
+    - main
 
 jobs:
 
@@ -49,7 +49,7 @@ jobs:
           docker run --rm -i -v ${PWD}:/repo:ro --workdir=/repo ghcr.io/hadolint/hadolint:v2.8.0-alpine sh -c "hadolint --config .hadolint.yaml ${{matrix.dockerfile}}"
 
   build-push-images:
-    # if: github.ref == 'refs/heads/master' && github.event_name == 'push' && github.event.schedule == '0 0 * * 0'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: [ubuntu-20.04]
     continue-on-error: true
     strategy:
