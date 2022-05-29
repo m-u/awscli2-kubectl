@@ -7,8 +7,7 @@ on:
 
   push:
     branches:
-    # - main
-    - feat/detect-changes
+    - main
 
 jobs:
   detect-changes:
@@ -50,9 +49,7 @@ jobs:
           docker run --rm -i -v ${PWD}:/repo:ro --workdir=/repo ghcr.io/hadolint/hadolint:v2.8.0-alpine sh -c "hadolint --config .hadolint.yaml ${{matrix.dockerfile}}"
 
   build-push-images:
-    if: github.ref == 'refs/heads/feat/detect-changes' && github.event_name == 'push' && (needs.detect-changes.outputs.dockerfile-changes == 'true') && (needs.detect-changes.outputs.version-changes  == 'true')
-    # && (needs.detect-changes.outputs.all != '[]')
-    #if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (needs.detect-changes.outputs.dockerfile-changes != '[]') && (needs.detect-changes.outputs.version-changes != '[]')
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (needs.detect-changes.outputs.dockerfile-changes == 'true') && (needs.detect-changes.outputs.version-changes  == 'true')
     runs-on: [ubuntu-20.04]
     needs: detect-changes
     continue-on-error: true
