@@ -34,7 +34,7 @@ jobs:
 
   lint_images:
     name: Lint images
-    if: github.event_name == 'pull_request' && (needs.detect-changes.outputs.dockerfile-changes != '[]')
+    if: github.event_name == 'pull_request' && (needs.detect-changes.outputs.dockerfile-changes == 'true')
     runs-on: [ubuntu-20.04]
     needs: detect-changes
     continue-on-error: true
