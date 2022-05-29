@@ -7,25 +7,31 @@ on:
 
   push:
     branches:
-    - main
+    # - main
+    - feat/detect-change
 
 jobs:
   detect-changes:
     runs-on: [ubuntu-20.04]
     outputs:
-      dockerfile-changes: ${{ steps.filter.outputs.changes }}
+      all: ${{ steps.filter.outputs.changes }}
+      dockerfile-changes: ${{ steps.filter.outputs.Dockerfile }}
+      version-changes: ${{ steps.filter.outputs.Version }}
     steps:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 10
-
-    - uses: dorny/paths-filter@v2
+    - 
+      name: changed-dockerfiles
+      uses: dorny/paths-filter@v2
       id: filter
       with:
         base: 'main'
         filters: |
           Dockerfile:
             - 'Dockerfile'
+          Version:
+            - 'version'
 
   lint_images:
     name: Lint images
@@ -44,7 +50,8 @@ jobs:
           docker run --rm -i -v ${PWD}:/repo:ro --workdir=/repo ghcr.io/hadolint/hadolint:v2.8.0-alpine sh -c "hadolint --config .hadolint.yaml ${{matrix.dockerfile}}"
 
   build-push-images:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' 
+    if: github.ref == 'refs/heads/feat/detect-changes' && github.event_name == 'push' && (needs.detect-changes.outputs.dockerfile-changes != '[]') && (needs.detect-changes.outputs.version-changes != '[]')
+    #if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (needs.detect-changes.outputs.dockerfile-changes != '[]') && (needs.detect-changes.outputs.version-changes != '[]')
     runs-on: [ubuntu-20.04]
     continue-on-error: true
     steps:
