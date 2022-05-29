@@ -48,11 +48,6 @@ jobs:
     #if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: [ubuntu-20.04]
     continue-on-error: true
-    strategy:
-      matrix:
-        arch:
-          - amd64
-          - arm64
     steps:
       -
         name: Checkout
