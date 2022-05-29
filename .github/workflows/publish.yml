@@ -7,7 +7,7 @@ on:
 
   push:
     branches:
-    - feat/helm-chart
+    - main
 
 jobs:
   detect-changes:
@@ -29,7 +29,7 @@ jobs:
 
   lint_images:
     name: Lint images
-    if: github.event_name == 'pull_request' && (needs.detect-changes.outputs.image-changes != '[]')
+    if: github.event_name == 'pull_request' && (needs.detect-changes.outputs.dockerfile-changes != '[]')
     runs-on: [ubuntu-20.04]
     needs: detect-changes
     continue-on-error: true
@@ -44,8 +44,7 @@ jobs:
           docker run --rm -i -v ${PWD}:/repo:ro --workdir=/repo ghcr.io/hadolint/hadolint:v2.8.0-alpine sh -c "hadolint --config .hadolint.yaml ${{matrix.dockerfile}}"
 
   build-push-images:
-    if: github.ref == 'refs/heads/feat/helm-chart' && github.event_name == 'push'
-    #if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' 
     runs-on: [ubuntu-20.04]
     continue-on-error: true
     steps:
