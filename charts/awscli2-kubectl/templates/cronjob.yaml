@@ -1,0 +1,52 @@
+apiVersion:  batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "awscli2-kubectl.fullname" . }}
+  labels:
+    {{- include "awscli2-kubectl.labels" . | nindent 4 }}
+spec:
+  schedule: {{ default "15 */4 * * *" .Values.schedule }}
+  successfulJobsHistoryLimit: 5
+  suspend: false
+  jobTemplate:
+    metadata:
+      labels:
+        name: {{ .Release.Name }}
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ include "awscli2-kubectl.serviceAccountName" . }}
+          volumes:
+            - name: aws-folder
+              hostPath:
+                path: /root/.aws
+                type: Directory
+          containers:
+          - image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+            name: {{ .Release.Name }}
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            command:
+              - /bin/sh
+              - -c
+              - |-
+                ECR_TOKEN=`aws ecr get-login-password --region ${AWS_REGION}`
+                NAMESPACE_NAME={{ .Release.Namespace }}
+                kubectl delete secret --ignore-not-found $SECRET_NAME -n $NAMESPACE_NAME
+                kubectl create secret docker-registry $SECRET_NAME \
+                --docker-server=https://${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+                --docker-username=AWS \
+                --docker-password="${ECR_TOKEN}" \
+                --namespace=${NAMESPACE_NAME}
+                kubectl patch serviceaccount default -p '{"imagePullSecrets":[{"name":"'$SECRET_NAME'"}]}'
+                echo "Secret was successfully updated at $(date)"
+            env:
+              - name: AWS_ACCOUNT
+                value: "{{ .Values.aws.account }}"
+              - name: AWS_REGION
+                value: "{{ .Values.aws.region }}"
+              - name: SECRET_NAME
+                value: "{{ .Release.Name }}"
+            volumeMounts:
+              - name: aws-folder
+                mountPath: /root/.aws
+          restartPolicy: Never

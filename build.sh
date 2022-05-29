@@ -1,39 +1,22 @@
+#!/usr/bin/env bash
 
 VERSION=$(cat version)
-ARCHITECTURE=$1
+DOCKER_HUB_USER="muccello"
+
+build_push_all() {
+    docker buildx build  -f Dockerfile  -t ${DOCKER_HUB_USER}/awscli2-kubectl:${VERSION} --platform linux/amd64,linux/arm64 --push . 
+}
 
 if [[ $GITHUB_ACTIONS != 'true' ]]; then
-    echo "Not running in git hub actions"
-    echo "Ensure you are logged in to dockerhub/muccello"
-    docker login -u muccello
+     echo "Not running in git hub actions"
+     docker container prune -f
+     docker image rm ${DOCKER_HUB_USER}/awscli2-kubectl:${VERSION}
+     #echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u $DOCKER_HUB_USER --password-stdin
+     docker buildx create --name aws2cli_kubectl --use
 fi
 
+build_push_all
 
-if [[ $ARCHITECTURE == amd64 ]]; then
-    # AMD64
-    echo "Building amd64 image"
-    docker build -f Dockerfile.amd64 -t muccello/awscli2-kubectl:${VERSION}-amd64 --build-arg ARCH=amd64/ .
-    docker push muccello/awscli2-kubectl:${VERSION}-amd64
-elif [[ $ARCHITECTURE == arm64 ]]; then
-    # ARM64V8
-    echo "Building arm64 image"
-    docker build -f Dockerfile.arm64 -t muccello/awscli2-kubectl:${VERSION}-arm64 --build-arg ARCH=arm64v8/ .
-    docker push muccello/awscli2-kubectl:${VERSION}-arm64
-elif [[ $ARCHITECTURE == all ]]; then
-    # AMD64
-    echo "Building amd64 image"
-    docker build -f Dockerfile.amd64 -t muccello/awscli2-kubectl:${VERSION}-amd64 --build-arg ARCH=amd64/ .
-    docker push muccello/awscli2-kubectl:${VERSION}-amd64
-    # ARM64V8
-    echo "Building arm64 image"
-    docker build -f Dockerfile.arm64 -t muccello/awscli2-kubectl:${VERSION}-arm64 --build-arg ARCH=arm64v8/ .
-    docker push muccello/awscli2-kubectl:${VERSION}-arm64
-else
-    echo "Missing architecture --> ./build.sh amd64 | arm64 | all"
+if [[ $GITHUB_ACTIONS != 'true' ]]; then
+    docker buildx rm aws2cli_kubectl
 fi
-
-docker manifest create muccello/awscli2-kubectl:${VERSION} \
-  --amend muccello/awscli2-kubectl:${VERSION}-amd64 \
-  --amend muccello/awscli2-kubectl:${VERSION}-arm64
-
-docker manifest push muccello/awscli2-kubectl:${VERSION}

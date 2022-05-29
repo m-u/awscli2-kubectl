@@ -1,0 +1,23 @@
+apiVersion:  batch/v1
+kind: Job
+metadata:
+  name: {{ include "awscli2-kubectl.fullname" . }}-initial-job
+  labels:
+    {{- include "awscli2-kubectl.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ include "awscli2-kubectl.serviceAccountName" . }}
+      containers:
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        name: {{ .Release.Name }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+          - /bin/sh
+          - -c
+          - |-
+            kubectl create job --from=cronjob/{{ include "awscli2-kubectl.fullname" . }} {{ .Release.Name }}-initial-cronjob-run
+      restartPolicy: Never
+  backoffLimit: 4

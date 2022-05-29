@@ -1,0 +1,7 @@
+# Hadolint configuration file
+
+# configure ignore rules
+# see https://github.com/hadolint/hadolint#rules for a list of available rules.
+ignored:
+  - DL3008 # pinning apt-get install versions
+  - DL3015 # Avoid additional packages by specifying `--no-install-recommends`
