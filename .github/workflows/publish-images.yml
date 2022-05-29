@@ -53,6 +53,7 @@ jobs:
     if: github.ref == 'refs/heads/feat/detect-changes' && github.event_name == 'push' && (needs.detect-changes.outputs.dockerfile-changes != '[]') && (needs.detect-changes.outputs.version-changes != '[]')
     #if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (needs.detect-changes.outputs.dockerfile-changes != '[]') && (needs.detect-changes.outputs.version-changes != '[]')
     runs-on: [ubuntu-20.04]
+    needs: detect-changes
     continue-on-error: true
     steps:
       -
